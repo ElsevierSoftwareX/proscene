@@ -924,7 +924,7 @@ public class Scene extends AbstractScene implements PConstants {
 		else
 			setMatrixHelper(new P5Java2DMatrixHelper(this, pg));
 
-		// 3. Eye
+		// 3. Eye		
 		setLeftHanded();
 		width = pg.width;
 		height = pg.height;
@@ -937,6 +937,9 @@ public class Scene extends AbstractScene implements PConstants {
 			setDottedGrid(false);
 		}
 		setEye(eye());// calls showAll();
+		
+	  //TODO experimental
+		createGrid();
 
 		// 4. Off-screen?
 		offscreen = pg != p.g;
@@ -2039,38 +2042,90 @@ public class Scene extends AbstractScene implements PConstants {
 		pg().popStyle();
 	}
 
-	@Override
-	public void drawDottedGrid(float size, int nbSubdivisions) {
-		pg().pushStyle();
+	PShape grid, s1, s2;
+	
+	protected void createGrid() {
+		grid = pg().createShape(GROUP);
+		
+		//<_
+		float size = eye().sceneRadius();
+		int nbSubdivisions = 10;
+		//->
+		
+		s1 = pg().createShape();
 		float posi, posj;
-		pg().beginShape(POINTS);
+		s1.beginShape(POINTS);
 		for (int i = 0; i <= nbSubdivisions; ++i) {
 			posi = size * (2.0f * i / nbSubdivisions - 1.0f);
 			for (int j = 0; j <= nbSubdivisions; ++j) {
 				posj = size * (2.0f * j / nbSubdivisions - 1.0f);
-				vertex(posi, posj);
+				s1.vertex(posi, posj);
 			}
 		}
-		pg().endShape();
+		s1.endShape();
+
+		s2 = pg().createShape();
+		s2.beginShape(POINTS);		
+		
+		
 		int internalSub = 5;
-		int subSubdivisions = nbSubdivisions * internalSub;
-		float currentWeight = pg().strokeWeight;
-		pg().colorMode(HSB, 255);
-		float hue = pg().hue(pg().strokeColor);
-		float saturation = pg().saturation(pg().strokeColor);
-		float brightness = pg().brightness(pg().strokeColor);
-		pg().stroke(hue, saturation, brightness * 10f / 17f);
-		pg().strokeWeight(currentWeight / 2);
-		pg().beginShape(POINTS);
+		int subSubdivisions = nbSubdivisions * internalSub;		
 		for (int i = 0; i <= subSubdivisions; ++i) {
 			posi = size * (2.0f * i / subSubdivisions - 1.0f);
 			for (int j = 0; j <= subSubdivisions; ++j) {
 				posj = size * (2.0f * j / subSubdivisions - 1.0f);
 				if (((i % internalSub) != 0) || ((j % internalSub) != 0))
-					vertex(posi, posj);
+					s2.vertex(posi, posj);
 			}
 		}
-		pg().endShape();
+		s2.endShape();
+		
+		grid.addChild(s1);
+		grid.addChild(s2);
+	}
+	
+	@Override
+	public void drawDottedGrid(float size, int nbSubdivisions) {
+		/**
+		 * Note 1: Ideally one should simply call pg().shape(grid) here.
+		 * 
+		 * Problem is that it breaks the current model of drawing
+		 * the grid according to current parameter values (pg().strokeColor,
+		 * pg().strokeWeight) which are set in the call drawGridHint().
+		 * It doesn't take into account the size and nbSubdivisions params
+		 * either.
+		 * 
+		 * Here we just try to deal with pg().strokeColor and pg().strokeWeight.
+		 * However, I suppose this will hinder performance, because it implies
+		 * changing the VBO's attributes (PShape). Again, ideally one should simply
+		 * try to call: pg().shape(grid), but I think that implies a different model
+		 * for drawing the hints.
+		 */
+		
+		/**
+		 * Note 2: seems PShape.colorMode is broken, e.g., the following:
+		 * 
+		 * float currentWeight = pg().strokeWeight;		
+		 * float hue = pg().hue(pg().strokeColor);
+		 * float saturation = pg().saturation(pg().strokeColor);
+		 * float brightness = pg().brightness(pg().strokeColor);
+		 *
+		 * s1.colorMode(HSB, 255);
+		 * s1.setStroke(pg().color(hue, saturation, brightness));
+		 * s1.setStrokeWeight(currentWeight);
+		 *
+		 * s2.colorMode(HSB, 255);
+		 * s2.setStroke(pg().color(hue, saturation, brightness * 10f / 17f));
+		 * s2.setStrokeWeight(currentWeight / 2);
+		 */
+		
+		pg().pushStyle();		
+		s1.setStroke(pg().strokeColor);
+		s1.setStrokeWeight(pg().strokeWeight);
+		s2.setStroke((int)(pg().strokeColor * 1.4f));
+		s2.setStrokeWeight(pg().strokeWeight / 2);
+		
+		pg().shape(grid);		
 		pg().popStyle();
 	}
 
