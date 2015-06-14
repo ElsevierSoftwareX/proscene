@@ -1,17 +1,12 @@
-import remixlab.proscene.*;
-import remixlab.dandelion.core.*;
-import remixlab.dandelion.geom.*;
-
 public class Box {
   Scene scene;
   public InteractiveFrame iFrame;
   float w, h, d;
-  int c;
+  color c;
 
   public Box(Scene scn, InteractiveFrame iF) {
     scene = scn;
     iFrame = iF;
-    iFrame.setGrabsInputThreshold(25);
     setSize();
     setColor();
   }
@@ -19,7 +14,6 @@ public class Box {
   public Box(Scene scn) {
     scene = scn;
     iFrame = new InteractiveFrame(scn);
-    iFrame.setGrabsInputThreshold(25);
     setSize();
     setColor();		
     setPosition();
@@ -30,36 +24,27 @@ public class Box {
   }
 
   public void draw(boolean drawAxes) {
-    pushMatrix();
-
-    /**
-    PMatrix3D pM3d =  new PMatrix3D();
-    float [] m = new float [16];
-    Mat m3d = iFrame.matrix();
-    m = m3d.getTransposed(m);
-    pM3d.set(m);
-    applyMatrix(pM3d);
-    // */
-    //Same as the previous commented lines, but a lot more efficient:
-    iFrame.applyWorldTransformation();
-
+    scene.pg().pushMatrix();
+    iFrame.applyWorldTransformation();		
     if (drawAxes)
-      scene.drawAxes(max(w, h, d)*1.3f);
-    noStroke();
-    if (iFrame.grabsInput(agent) || iFrame.grabsInput(scene.motionAgent()))
-      fill(255, 0, 0);
+      //DrawingUtils.drawAxes(parent, PApplet.max(w,h,d)*1.3f);
+      scene.drawAxes(PApplet.max(w, h, d)*1.3f);
+    scene.pg().noStroke();
+    if (iFrame.grabsInput(scene.motionAgent()))
+      scene.pg().fill(255, 0, 0);
     else
-      fill(getColor());
+      scene.pg().fill(getColor());
     //Draw a box		
-    box(w, h, d);
+    scene.pg().box(w, h, d);
 
-    popMatrix();
+    scene.pg().popMatrix();
   }
 
   public void setSize() {
-    w = random(10, 40);
-    h = random(10, 40);
-    d = random(10, 40);
+    w = scene.pApplet().random(10, 40);
+    h = scene.pApplet().random(10, 40);
+    d = scene.pApplet().random(10, 40);
+    iFrame.setGrabsInputThreshold(PApplet.max(w, h, d), true);
   }
 
   public void setSize(float myW, float myH, float myD) {
@@ -76,7 +61,7 @@ public class Box {
     c = color(random(0, 255), random(0, 255), random(0, 255));
   }
 
-  public void setColor(int myC) {
+  public void setColor(color myC) {
     c = myC;
   }
 
@@ -87,7 +72,7 @@ public class Box {
   public void setPosition() {
     float low = -100;
     float high = 100;
-    iFrame.setPosition(new Vec(random(low, high), random(low, high), random(low, high)));
+    iFrame.setPosition(new Vec(scene.pApplet().random(low, high), scene.pApplet().random(low, high), scene.pApplet().random(low, high)));
   }
 
   public void setPosition(Vec pos) {

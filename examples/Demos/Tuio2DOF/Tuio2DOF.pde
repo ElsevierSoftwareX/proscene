@@ -31,13 +31,15 @@ public void setup() {
   agent = new TUIOAgent(scene, "MyTuioAgent");
   scene.setRadius(150);
   scene.showAll();
-  //'f' toggles hints
+  // 'f' toggles hints
   scene.setPickingVisualHint(true);
   boxes = new Box[30];
-
-  for (int i = 0; i < boxes.length; i++)
-    boxes[i] = new Box(scene);
-
+  for (int i = 0; i < boxes.length; i++) {
+	boxes[i] = new Box(scene);
+	agent.addGrabber(boxes[i].iFrame);
+  }
+  agent.addGrabber(scene.eye().frame());
+  agent.setDefaultGrabber(scene.eye().frame());
   tuioClient = new TuioProcessing(this, 3333);
   // 'h' also displays it:
   scene.displayInfo();
