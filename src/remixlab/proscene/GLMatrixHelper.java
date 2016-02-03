@@ -26,7 +26,6 @@ class GLMatrixHelper extends MatrixHelper {
   @Override
   public void bind(boolean recompute) {
     System.out.println("custom bind");
-    
     Camera camera = this.gScene.camera();
     
     // 1. set projection
@@ -40,25 +39,14 @@ class GLMatrixHelper extends MatrixHelper {
      pggl().ortho(-wh[0], wh[0], -wh[1], wh[1], camera.zNear(), camera.zFar());
      break;
     }
-    //if(this.gScene.isRightHanded())
-     //pggl().projection.m11 = -pggl().projection.m11;  
-    // if our camera() matrices are detached from the processing Camera matrices,
-    // we cache the processing camera projection matrix into our camera()
-    //setProjection(Scene.toMat(pggl().projection)); 
-    // */
+    if(this.gScene.isRightHanded())
+     pggl().projection.m11 = -pggl().projection.m11;  
     
-    // /**
-    // set modelview
+    // 2. set modelview
     camera.computeView();
-    // option 2: compute the processing camera modelview matrix from our camera() parameters
     pggl().camera(camera.position().x(), camera.position().y(), camera.position().z(),
                     camera.at().x(), camera.at().y(), camera.at().z(),
-                    camera.upVector().x(), camera.upVector().y(), camera.upVector().z());
-    // if our camera() matrices are detached from the processing Camera matrices,
-    // we cache the processing camera modelview and the projmodelview matrices into our camera()
-    //setModelView(Scene.toMat(pggl().modelview));
-    //camera.setProjModelViewMatrix(pggl().projmodelview);
-    
+                    camera.upVector().x(), camera.upVector().y(), camera.upVector().z());    
     if (recompute)
       cacheProjectionView();
   }
