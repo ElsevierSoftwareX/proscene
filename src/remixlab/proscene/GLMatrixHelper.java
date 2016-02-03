@@ -12,6 +12,7 @@ package remixlab.proscene;
 
 import processing.core.PMatrix3D;
 import processing.opengl.PGraphicsOpenGL;
+import remixlab.dandelion.core.Camera;
 import remixlab.dandelion.core.MatrixHelper;
 import remixlab.dandelion.geom.Mat;
 
@@ -21,6 +22,51 @@ import remixlab.dandelion.geom.Mat;
  */
 class GLMatrixHelper extends MatrixHelper {
   PGraphicsOpenGL pg;
+  
+  @Override
+  public void bind(boolean recompute) {
+    System.out.println("custom bind");
+    
+    Camera camera = this.gScene.camera();
+    
+    // 1. set projection
+    camera.computeProjection();
+    switch (camera.type()) {
+    case PERSPECTIVE:
+     pggl().perspective(camera.fieldOfView(), camera.aspectRatio(), camera.zNear(), camera.zFar());
+     break;
+    case ORTHOGRAPHIC:
+     float[] wh = camera.getOrthoWidthHeight();//return halfWidth halfHeight
+     pggl().ortho(-wh[0], wh[0], -wh[1], wh[1], camera.zNear(), camera.zFar());
+     break;
+    }
+    //if(this.gScene.isRightHanded())
+     //pggl().projection.m11 = -pggl().projection.m11;  
+    // if our camera() matrices are detached from the processing Camera matrices,
+    // we cache the processing camera projection matrix into our camera()
+    //setProjection(Scene.toMat(pggl().projection)); 
+    // */
+    
+    // /**
+    // set modelview
+    camera.computeView();
+    // option 2: compute the processing camera modelview matrix from our camera() parameters
+    pggl().camera(camera.position().x(), camera.position().y(), camera.position().z(),
+                    camera.at().x(), camera.at().y(), camera.at().z(),
+                    camera.upVector().x(), camera.upVector().y(), camera.upVector().z());
+    // if our camera() matrices are detached from the processing Camera matrices,
+    // we cache the processing camera modelview and the projmodelview matrices into our camera()
+    //setModelView(Scene.toMat(pggl().modelview));
+    //camera.setProjModelViewMatrix(pggl().projmodelview);
+    
+    if (recompute)
+      cacheProjectionView();
+  }
+  
+  @Override
+  public Mat projection() {
+    return Scene.toMat(pggl().projection.get());
+  }
 
   public GLMatrixHelper(Scene scn, PGraphicsOpenGL renderer) {
     super(scn);
@@ -49,11 +95,6 @@ class GLMatrixHelper extends MatrixHelper {
   @Override
   public void printProjection() {
     pggl().printProjection();
-  }
-
-  @Override
-  public Mat projection() {
-    return Scene.toMat(pggl().projection.get());
   }
 
   @Override
